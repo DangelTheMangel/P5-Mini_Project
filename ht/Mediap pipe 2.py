@@ -1,7 +1,9 @@
 import cv2
 import mediapipe as mp
 import os
+import serial
 
+serialportName = 'COM3'
 cap = cv2.VideoCapture(0)
 mpHands = mp.solutions.hands
 hands = mpHands.Hands()
@@ -12,6 +14,11 @@ print(os.path.join(folder,heightmaps[0]))
 heighMap = cv2.imread(os.path.join(folder,heightmaps[0]), cv2.IMREAD_GRAYSCALE)
 hmPreview = None
 resieHatMap = False
+
+ser = serial.Serial(serialportName)  # open serial port
+print(ser.name)         # check which port was really used
+ser.write(b'b')     # write a string
+ser.close()  
 while True:
     success, image = cap.read()
     image = cv2.flip(image, 1)
@@ -36,6 +43,8 @@ while True:
                         cv2.circle(image, (cx, cy), 25, (255, 0, 255), cv2.FILLED)
                         cv2.circle(hmPreview, (cx, cy), 25, (heightValue, heightValue, heightValue), cv2.FILLED)
                         print("cx: " + str(cx)+ " cy: " + str(cy) + " color value: " + str(heighMap[cx,cy]))
+                        ser.write(str(heighMap[cx,cy]))     # write a string
+                        ser.close()  
                     except:
                         print("An exception occurred")
                     #print ("diaginal point 1 (x1,y1) = ({},{})".format(x1, y1))
