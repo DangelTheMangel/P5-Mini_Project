@@ -5,14 +5,18 @@
 //// pink og sort er + - for den bevælgige del
 int MoPin = 2;  // Vibration motor connected to digital pin 2
 int analogpin = 3;
-int amplitude = 5;
-int frequency = 10;
-int angularFrequency = 10;
+int amplitude = 1.5;
+int frequency = 50;
+int angularFrequency =20;
 int afDivider = 1000;
 int minimumDelay = 1000;
+float pi = 3.14;
 char sepperatrorChar = ';';
 char endchar = '\n';
 int in_Signal;
+int phase = 1;
+
+bool testsignal = true;
 void setup() {
   pinMode(MoPin, OUTPUT);
   pinMode(analogpin, OUTPUT);
@@ -54,6 +58,7 @@ void loop() {
           break;
         }
         if(c == 'b'){
+          testsignal = !testsignal;
           testVibration();
         }
         input += c;
@@ -64,8 +69,13 @@ void loop() {
       message_pos = 0;
     }
   }
-  float signal = amplitude * (sin(CycleCounter*angularFrequency/afDivider)+1);
+  if(testsignal){
+  //float signal = amplitude * (sin(CycleCounter*angularFrequency/afDivider)+1);
+  //float signal = amplitude * (sin((CycleCounter*2*pi*frequency+phase)+1));
+  float signal = amplitude * (sin(CycleCounter*angularFrequency/afDivider)+phase);
   Serial.println(signal);
   analogWrite(analogpin, signal);
   CycleCounter += 1;
+
+  }
 }
