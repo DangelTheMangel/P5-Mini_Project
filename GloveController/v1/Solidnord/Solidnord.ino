@@ -15,7 +15,6 @@ char sepperatrorChar = ';';
 char endchar = '\n';
 int in_Signal;
 int phase = 1;
-
 bool testsignal = true;
 void setup() {
   pinMode(MoPin, OUTPUT);
