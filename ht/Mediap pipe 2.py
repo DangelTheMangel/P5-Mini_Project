@@ -4,7 +4,8 @@ import os
 import serial
 import matplotlib.pyplot as plt
 import numpy as np
-
+import time
+print("\n\n\n\n\n\n\n\n#######################PROGRAM STARTS#######################")
 ##*Variables*##
 print("Variables section started")
 serialportName = 'COM3'
@@ -18,24 +19,22 @@ heighMap = cv2.imread(os.path.join(folder,heightmaps[0]), cv2.IMREAD_GRAYSCALE)
 hmPreview = None
 resieHatMap = False
 signal = 0
+arduinoSerial = serial.Serial(port=serialportName,  baudrate=9600, timeout=.1)
 print("Variables Finnished")
 ##**SETUP**##
 print("Setup Started")
-ser = serial.Serial(serialportName)  # open serial port
-print(ser.name)         # check which port was really used
-ser.write(b'b')     # write a string
-ser.close()
+arduinoSerial.write(b'b')     # write a string
 print(folder)
 print("Setup done")
+def write_serial(x):
+    arduinoSerial.write(bytes(x,  'utf-8'))
+
 
 ##**LOOP**##
 print("Loop started")
 while True:
     success, image = cap.read()
     image = cv2.flip(image, 1)
-    if resieHatMap == False and success == True:
-        heighMap = cv2.resize(heighMap, (image.shape[1], image.shape[0]))
-        resieHatMap = True
     hmPreview = heighMap.copy()
     imageRGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = hands.process(imageRGB)
@@ -51,6 +50,18 @@ while True:
                         heightValue = int(heighMap[cx,cy])
                         cv2.circle(image, (cx, cy), 25, (255, 0, 255), cv2.FILLED)
                         cv2.circle(hmPreview, (cx, cy), 25, (heightValue, heightValue, heightValue), cv2.FILLED)
+                        print("cx: " + str(cx)+ " cy: " + str(cy))
+                        hhm = heighMap.shape[1]
+                        whm = heighMap.shape[0]
+                        print("hhm: " + str(hhm)+ " whm: " + str(whm))
+                        hi = image.shape[1]
+                        wi = image.shape[0]
+                        print("wi: " + str(wi)+ " hi: " + str(hi))
+                        finalX = int((cx/hi)*hhm)
+                        finalY = int((cy/wi)*whm)
+                        print("finalX: " + str(finalX)+ " finalY: " + str(finalY))
+                        signal = heighMap[finalX,finalY]
+                        print("signal"+ str(signal))
                         #print("cx: " + str(cx)+ " cy: " + str(cy) + " color value: " + str(heighMap[cx,cy]))
                         
                     except:
@@ -60,7 +71,13 @@ while True:
 
             mpDraw.draw_landmarks(image, handLms, mpHands.HAND_CONNECTIONS)
     cv2.imshow("Input", image)
-    cv2.imshow("Output", hmPreview)        
+    cv2.imshow("Output", hmPreview)
+    if(signal != 0):       
+        write_serial(str(signal))
 
-    # Set plot title and labels
-    cv2.waitKey(1)
+    if cv2.waitKey(1) & 0xFF == ord('q'):  # Check for 'q' key press to exit
+        break
+
+# Release the camera and close all OpenCV windows
+cap.release()
+cv2.destroyAllWindows()
