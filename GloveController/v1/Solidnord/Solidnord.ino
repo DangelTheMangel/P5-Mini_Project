@@ -9,13 +9,14 @@ int amplitude = 1.5;
 int frequency = 50;
 int angularFrequency = 20;
 int afDivider = 1000;
-int minimumDelay = 100;
+int minimumDelay = 10;
 float pi = 3.14;
 char sepperatrorChar = ';';
 char endchar = '\n';
 int in_Signal;
 int phase = 1;
-bool testsignal = true;
+bool testsignal = false;
+bool readyToRecvieSignal = false;
 void setup() {
   pinMode(MoPin, OUTPUT);
   pinMode(analogpin, OUTPUT);
@@ -38,8 +39,6 @@ int CycleCounter = 0;
 void loop() {
   readData();
   if (testsignal) {
-    //float signal = amplitude * (sin(CycleCounter*angularFrequency/afDivider)+1);
-    //float signal = amplitude * (sin((CycleCounter*2*pi*frequency+phase)+1));
     float signal = amplitude * (sin(CycleCounter * angularFrequency / afDivider) + phase);
     Serial.println(signal);
     analogWrite(analogpin, signal);
@@ -47,49 +46,29 @@ void loop() {
   }
 }
 
-//Create a place to hold the incoming message
-char message[MAX_MESSAGE_LENGTH];
-
 void readData() {
-  //Check to see if anything is available in the serial receive buffer
   while (Serial.available() > 0) {
-    static unsigned int message_pos = 0;
-    //message = char[MAX_MESSAGE_LENGTH]
-    //Read the next available byte in the serial receive buffer
-    char inByte = Serial.read();
-    //Message coming in (check not terminating character) and guard for over message size
-    if (inByte != '\n' && (message_pos < MAX_MESSAGE_LENGTH - 1)) {
-      //Add the incoming byte to our message
-      message[message_pos] = inByte;
-      message_pos++;
-    }
-    //Full message received...
-    else {
-      interpretData();
-      message_pos = 0;
-    }
+    interpretDataFlick();
+  }
+  if(readyToRecvieSignal){
+    Serial.println("r");
   }
 }
 
-void interpretData() {
-  String input = " ";
-  for (char c : message) {
-    if (c == endchar) {
-      break;
-    }
-    if (c == 'b') {
-      testsignal = !testsignal;
-      testVibration();
-    }
-    input += c;
-    //c = '\0';
-  }
-  in_Signal = input.toFloat();
-  //Serial.println(in_Signal);
-  analogWrite(analogpin, in_Signal);
-  delay(minimumDelay);
-  analogWrite(analogpin, 0);
-  Serial.println(in_Signal);
-  memset(message, '\0', MAX_MESSAGE_LENGTH);
+void interpretDataFlick() {
+    readyToRecvieSignal = false;
+    in_Signal = Serial.readString().toInt();
+    analogWrite(analogpin, in_Signal);
+    delay(minimumDelay);
+    analogWrite(analogpin, 0);
+    Serial.flush();
+    readyToRecvieSignal = true;
 }
 
+void interpretDataContinues() {
+    readyToRecvieSignal = false;
+    in_Signal = Serial.readString().toInt();
+    analogWrite(analogpin, in_Signal);
+    Serial.flush();
+    readyToRecvieSignal = true;
+}

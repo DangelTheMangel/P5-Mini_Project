@@ -19,16 +19,26 @@ heighMap = cv2.imread(os.path.join(folder,heightmaps[0]), cv2.IMREAD_GRAYSCALE)
 hmPreview = None
 resieHatMap = False
 signal = 0
+prevSignal = 0
 arduinoSerial = serial.Serial(port=serialportName,  baudrate=9600, timeout=.1)
+isReadyToSend = True
 print("Variables Finnished")
 ##**SETUP**##
 print("Setup Started")
-arduinoSerial.write(b'b')     # write a string
+arduinoSerial.write(bytes(str(100),  'utf-8'))     # write a string
 print(folder)
 print("Setup done")
-def write_serial(x):
-    arduinoSerial.write(bytes(x,  'utf-8'))
-
+def write_read_serial(x,rts):
+    if(rts == True and x > 0):
+        print("The input signal"+ str(x))
+        arduinoSerial.write(bytes(str(x),  'utf-8'))
+        rts = False
+    else:
+        inputArd = arduinoSerial.readline().decode('utf-8').strip()
+        print(inputArd)
+        if inputArd == "r":
+            rts = True
+    return rts
 
 ##**LOOP**##
 print("Loop started")
@@ -60,7 +70,9 @@ while True:
                         finalX = int((cx/hi)*hhm)
                         finalY = int((cy/wi)*whm)
                         print("finalX: " + str(finalX)+ " finalY: " + str(finalY))
+                        prevSignal = signal
                         signal = heighMap[finalX,finalY]
+                        
                         print("signal"+ str(signal))
                         #print("cx: " + str(cx)+ " cy: " + str(cy) + " color value: " + str(heighMap[cx,cy]))
                         
@@ -71,9 +83,8 @@ while True:
 
             mpDraw.draw_landmarks(image, handLms, mpHands.HAND_CONNECTIONS)
     cv2.imshow("Input", image)
-    cv2.imshow("Output", hmPreview)
-    if(signal != 0):       
-        write_serial(str(signal))
+    cv2.imshow("Output", hmPreview)     
+    isReadyToSend = write_read_serial(abs(prevSignal-signal),isReadyToSend)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):  # Check for 'q' key press to exit
         break
