@@ -73,7 +73,7 @@ while True:
                         prevSignal = signal
                         signal = heighMap[finalX,finalY]
                         
-                        print("signal"+ str(signal))
+                        print("signal"+ str(signal) + " The pump: " + str(abs(prevSignal-signal)))
                         #print("cx: " + str(cx)+ " cy: " + str(cy) + " color value: " + str(heighMap[cx,cy]))
                         
                     except:

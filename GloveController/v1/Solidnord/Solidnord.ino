@@ -32,6 +32,7 @@ void testVibration() {
   digitalWrite(MoPin, LOW);
   delay(1000);
   Serial.println("Test signal done");
+  readyToRecvieSignal = true;
 }
 const unsigned int MAX_MESSAGE_LENGTH = 20;
 int CycleCounter = 0;
